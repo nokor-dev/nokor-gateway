@@ -1,12 +1,64 @@
 // src/routes.rs
 
-use crate::app_state::{is_cache_expired, AppState, CacheData};
+use crate::app_state::{is_cache_expired, AppState, CacheData, Route};
 use actix_web::{Error, web, HttpRequest, HttpResponse};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use reqwest::Client;
 
-pub async fn request_handler(
+pub async fn list_routes_handler(
+    app_state: web::Data<Arc<Mutex<AppState>>>, // Access shared app_state
+) -> HttpResponse {
+    // Lock the app state to read the routes
+    let app_state = app_state.lock().unwrap();
+    let routes = app_state.routes.lock().unwrap();
+
+    // Collect the routes into a JSON-friendly format
+    let routes_list: Vec<_> = routes
+        .iter()
+        .map(|(name, route)| {
+            serde_json::json!({
+                "name": name,
+                "url": route.url,
+                "route": route.route,
+            })
+        })
+        .collect();
+
+    HttpResponse::Ok().json(routes_list) // Return the list as JSON
+}
+
+pub async fn admin_handler(
+    app_state: web::Data<Arc<Mutex<AppState>>>, // Access shared app_state
+    new_route: web::Json<NewRoute>,            // Receive route details as JSON
+) -> HttpResponse {
+    // Lock the app state to modify the routes
+    let app_state = app_state.lock().unwrap();
+    
+    // Add the new route to the routes HashMap
+    app_state.routes.lock().unwrap().insert(
+        new_route.name.clone(),
+        Route {
+            url: new_route.url.clone(),
+            route: new_route.route.clone(),
+        },
+    );
+
+    HttpResponse::Ok().body(format!(
+        "Route '{}' added successfully!",
+        new_route.name
+    ))
+}
+
+// Define a structure to represent the new route details
+#[derive(serde::Deserialize)]
+pub struct NewRoute {
+    pub name: String, // Route key
+    pub url: String,  // Base URL for the route
+    pub route: String, // Path segment for the route
+}
+
+pub async fn api_handler(
     client: web::Data<Client>,
     app_state: web::Data<Arc<Mutex<AppState>>>,
     path: web::Path<String>,
