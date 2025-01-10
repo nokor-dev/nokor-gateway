@@ -11,3 +11,9 @@ reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 futures = "0.3"
+color-eyre = "0.6.3"
+dotenv = "0.15.0"
+config = "0.15.4"
+eyre = "0.6.12"
+sqlx = { version = "0.8.3", default-features = false, features = [ "runtime-tokio", "macros", "postgres", "uuid", "chrono" ] }
+tracing = "0.1.41"

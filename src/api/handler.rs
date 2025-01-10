@@ -1,10 +1,15 @@
-// src/routes.rs
-
 use crate::app_state::{is_cache_expired, AppState, CacheData, Route};
-use actix_web::{Error, web, HttpRequest, HttpResponse};
-use std::sync::{Arc, Mutex};
-use std::time::SystemTime;
+use actix_web::{web, Error, HttpRequest, HttpResponse};
 use reqwest::Client;
+use std::{sync::{Arc, Mutex}, time::SystemTime};
+use super::api::NewApi;
+
+pub fn app_config(config: &mut web::ServiceConfig) {
+    config.service(
+        web::scope("/api")
+            .route("/{name}", web::get().to(api_handler))
+    );
+}
 
 pub async fn list_routes_handler(
     app_state: web::Data<Arc<Mutex<AppState>>>, // Access shared app_state
@@ -28,9 +33,9 @@ pub async fn list_routes_handler(
     HttpResponse::Ok().json(routes_list) // Return the list as JSON
 }
 
-pub async fn admin_handler(
+pub async fn create_route_handler(
     app_state: web::Data<Arc<Mutex<AppState>>>, // Access shared app_state
-    new_route: web::Json<NewRoute>,            // Receive route details as JSON
+    new_route: web::Json<NewApi>,            // Receive route details as JSON
 ) -> HttpResponse {
     // Lock the app state to modify the routes
     let app_state = app_state.lock().unwrap();
@@ -48,14 +53,6 @@ pub async fn admin_handler(
         "Route '{}' added successfully!",
         new_route.name
     ))
-}
-
-// Define a structure to represent the new route details
-#[derive(serde::Deserialize)]
-pub struct NewRoute {
-    pub name: String, // Route key
-    pub url: String,  // Base URL for the route
-    pub route: String, // Path segment for the route
 }
 
 pub async fn api_handler(
