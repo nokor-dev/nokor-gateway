@@ -2,12 +2,13 @@ mod app_state;
 mod config;
 mod api;
 mod admin;
+mod errors;
 
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 use actix_web::{web, App, HttpServer};
 use actix_web::middleware::Logger;
-use app_state::Route;
+use api::api::Route;
 use config::Configurations;
 use reqwest::Client;
 use crate::app_state::AppState;

@@ -2,6 +2,8 @@ use std::sync::Mutex;
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+use crate::api::api::Route;
+
 // AppState structure to manage routes and cached data
 pub struct AppState {
     pub routes: Mutex<HashMap<String, Route>>,   // Store routes mapping
@@ -13,13 +15,6 @@ pub struct AppState {
 pub struct CacheData {
     pub data: String,
     pub timestamp: SystemTime,
-}
-
-// Route structure to store the URL and the route
-#[derive(Clone)]
-pub struct Route {
-    pub url: String,  // Base URL (e.g., jsonplaceholder)
-    pub route: String, // Specific route (e.g., /posts, /users)
 }
 
 // Utility function to check if the cache has expired

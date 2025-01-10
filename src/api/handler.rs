@@ -1,14 +1,23 @@
-use crate::app_state::{is_cache_expired, AppState, CacheData, Route};
+use crate::app_state::{is_cache_expired, AppState, CacheData};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use reqwest::Client;
 use std::{sync::{Arc, Mutex}, time::SystemTime};
-use super::api::NewApi;
+use super::{api::{NewApi, Route}, repository::ApiRepository};
 
 pub fn app_config(config: &mut web::ServiceConfig) {
     config.service(
         web::scope("/api")
             .route("/{name}", web::get().to(api_handler))
+            .route("/{name}/db", web::get().to(list_routes_from_db))
     );
+}
+
+pub async fn list_routes_from_db(
+    repository: ApiRepository, // Access shared repository
+) -> HttpResponse {
+    let routes = repository.list().await.unwrap();
+
+    HttpResponse::Ok().json(routes) // Return the list as JSON
 }
 
 pub async fn list_routes_handler(
