@@ -31,16 +31,19 @@ async fn main() -> std::io::Result<()> {
     let app_state = Arc::new(Mutex::new(AppState {
         routes: Mutex::new({
             routes.insert("posts".to_string(), Route {
-                url: "https://jsonplaceholder.typicode.com".to_string(),
+                url: "https://jsonplaceholder.typicode.com/posts".to_string(),
                 route: "posts".to_string(),
+                path: "posts".to_string(),
             });
             routes.insert("users".to_string(), Route {
-                url: "https://jsonplaceholder.typicode.com".to_string(),
+                url: "https://jsonplaceholder.typicode.com/users".to_string(),
                 route: "users".to_string(),
+                path: "users".to_string(),
             });
             routes.insert("comments".to_string(), Route {
-                url: "https://jsonplaceholder.typicode.com".to_string(),
+                url: "https://jsonplaceholder.typicode.com/comments".to_string(),
                 route: "comments".to_string(),
+                path: "comments".to_string(),
             });
             routes
         }),

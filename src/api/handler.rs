@@ -8,16 +8,20 @@ pub fn app_config(config: &mut web::ServiceConfig) {
     config.service(
         web::scope("/api")
             .route("/{name}", web::get().to(api_handler))
-            .route("/{name}/db", web::get().to(list_routes_from_db))
     );
+}
+pub async fn list(
+    repository: ApiRepository, // Access shared repository
+) -> HttpResponse {
+    let routes = repository.list().await.unwrap();
+    routes.into_iter().next().unwrap()
 }
 
 pub async fn list_routes_from_db(
     repository: ApiRepository, // Access shared repository
 ) -> HttpResponse {
-    let routes = repository.list().await.unwrap();
-
-    HttpResponse::Ok().json(routes) // Return the list as JSON
+    let routes = repository.list_columns().await.unwrap();
+    routes.into_iter().next().unwrap()
 }
 
 pub async fn list_routes_handler(
@@ -30,9 +34,9 @@ pub async fn list_routes_handler(
     // Collect the routes into a JSON-friendly format
     let routes_list: Vec<_> = routes
         .iter()
-        .map(|(name, route)| {
+        .map(|(path, route)| {
             serde_json::json!({
-                "name": name,
+                "path": path,
                 "url": route.url,
                 "route": route.route,
             })
@@ -51,16 +55,17 @@ pub async fn create_route_handler(
     
     // Add the new route to the routes HashMap
     app_state.routes.lock().unwrap().insert(
-        new_route.name.clone(),
+        new_route.path.clone(),
         Route {
             url: new_route.url.clone(),
             route: new_route.route.clone(),
+            path: new_route.path.clone(),
         },
     );
 
     HttpResponse::Ok().body(format!(
         "Route '{}' added successfully!",
-        new_route.name
+        new_route.path
     ))
 }
 
@@ -100,10 +105,8 @@ pub async fn api_handler(
             }
         }
 
-        // Build the full URL dynamically based on the mapped route
-        let full_url = format!("{}/{}", route.url, route.route);
         // Send GET request to the origin
-        let response = client.get(&full_url).send().await;
+        let response = client.get(&route.url).send().await;
 
         match response {
             Ok(resp) => {
